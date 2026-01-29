@@ -1,0 +1,59 @@
+import os, json, sys
+from datetime import datetime
+import tweepy
+
+MAX_LEN = 260  # keep buffer under X limits
+
+def split_for_x(text: str, limit: int = MAX_LEN):
+    parts, buf = [], ""
+    for line in text.split("\n"):
+        if len(buf) + len(line) + 1 > limit:
+            parts.append(buf.strip())
+            buf = ""
+        buf += line + "\n"
+    if buf.strip():
+        parts.append(buf.strip())
+    return parts
+
+def get_x_client():
+    return tweepy.Client(
+        consumer_key=os.environ["X_API_KEY"],
+        consumer_secret=os.environ["X_API_SECRET"],
+        access_token=os.environ["X_ACCESS_TOKEN"],
+        access_token_secret=os.environ["X_ACCESS_SECRET"],
+        wait_on_rate_limit=True
+    )
+
+def post_thread(client: tweepy.Client, text: str):
+    parts = split_for_x(text)
+    first = client.create_tweet(text=parts[0])
+    reply_to = first.data["id"]
+    ids = [reply_to]
+
+    for p in parts[1:]:
+        r = client.create_tweet(text=p, in_reply_to_tweet_id=reply_to)
+        reply_to = r.data["id"]
+        ids.append(reply_to)
+
+    return ids
+
+def main():
+    payload = json.loads(sys.stdin.read() or "{}")
+    text = (payload.get("text") or "").strip()
+    title = (payload.get("title") or "IronvaleQuant Update").strip()
+
+    if not text:
+        raise SystemExit("No content in payload.text")
+
+    # Add a header if you want consistency
+    stamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    final_text = f"{title} — {stamp}\n\n{text}".strip()
+
+    client = get_x_client()
+    tweet_ids = post_thread(client, final_text)
+
+    # Print ids to logs for debugging
+    print("Posted tweet ids:", tweet_ids)
+
+if __name__ == "__main__":
+    main()
