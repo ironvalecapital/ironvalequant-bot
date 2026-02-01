@@ -1,0 +1,35 @@
+name: Post to X (IronvaleQuant)
+
+on:
+  workflow_dispatch:
+    inputs:
+      text:
+        description: "Tweet text (use \\n for newlines)."
+        required: true
+      reply_to:
+        description: "Optional: Tweet ID to reply/thread to"
+        required: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps
+        run: npm install
+
+      - name: Post
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+          TEXT: ${{ inputs.text }}
+          REPLY_TO: ${{ inputs.reply_to }}
+        run: node post.js
