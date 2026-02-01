@@ -15,13 +15,48 @@ def split_for_x(text: str, limit: int = MAX_LEN):
         parts.append(buf.strip())
     return parts
 
+def _get_env(name: str, fallbacks: list[str]):
+    """
+    Helper to fetch environment variables with fallback names.  Returns
+    None if none of the names exist or contain a non-empty value.
+    """
+    # Try primary name first
+    if name in os.environ and os.environ[name]:
+        return os.environ[name]
+    for fb in fallbacks:
+        if fb in os.environ and os.environ[fb]:
+            return os.environ[fb]
+    return None
+
+
 def get_x_client():
+    """
+    Construct a Tweepy client using either the new environment variable names
+    (CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET) or the
+    legacy X_API_KEY/X_API_SECRET/X_ACCESS_TOKEN/X_ACCESS_SECRET names.  Raises
+    a RuntimeError if required credentials are missing.
+    """
+    consumer_key = _get_env("CONSUMER_KEY", ["X_API_KEY"])
+    consumer_secret = _get_env("CONSUMER_SECRET", ["X_API_SECRET"])
+    access_token = _get_env("ACCESS_TOKEN", ["X_ACCESS_TOKEN"])
+    # Both X_ACCESS_SECRET and X_ACCESS_TOKEN_SECRET have been used previously
+    access_token_secret = _get_env("ACCESS_TOKEN_SECRET", ["X_ACCESS_SECRET", "X_ACCESS_TOKEN_SECRET"])
+
+    if not consumer_key or not consumer_secret:
+        raise RuntimeError(
+            "Missing consumer key/secret environment variables. Set CONSUMER_KEY and CONSUMER_SECRET (or legacy X_API_KEY/X_API_SECRET)."
+        )
+    if not access_token or not access_token_secret:
+        raise RuntimeError(
+            "Missing access token/secret environment variables. Set ACCESS_TOKEN and ACCESS_TOKEN_SECRET (or legacy X_ACCESS_TOKEN/X_ACCESS_SECRET/X_ACCESS_TOKEN_SECRET)."
+        )
+
     return tweepy.Client(
-        consumer_key=os.environ["X_API_KEY"],
-        consumer_secret=os.environ["X_API_SECRET"],
-        access_token=os.environ["X_ACCESS_TOKEN"],
-        access_token_secret=os.environ["X_ACCESS_SECRET"],
-        wait_on_rate_limit=True
+        consumer_key=consumer_key,
+        consumer_secret=consumer_secret,
+        access_token=access_token,
+        access_token_secret=access_token_secret,
+        wait_on_rate_limit=True,
     )
 
 def post_thread(client: tweepy.Client, text: str):

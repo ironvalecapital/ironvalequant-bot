@@ -27,7 +27,7 @@ To post this message with threads using the included Python script, pipe the JSO
 cat messages/week_ahead_feb1_2026.json | python "bot.py (posts threads + saves archive file)"
 ```
 
-The script reads the `tweet` and `thread` values, adds a timestamped header, and posts each segment as a reply to the previous one.  Ensure your `X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, and `X_ACCESS_SECRET` are set in your environment (e.g., via GitHub repository secrets) before running.
+The script reads the `tweet` and `thread` values, adds a timestamped header, and posts each segment as a reply to the previous one.  To authenticate you must provide your X/Twitter API credentials via environment variables.  Prefer the **consumer key/secret** naming used in the current developer portal: `CONSUMER_KEY`, `CONSUMER_SECRET`, `ACCESS_TOKEN`, and `ACCESS_TOKEN_SECRET`.  For backward compatibility, the script will also honour the legacy names `X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_SECRET` and `X_ACCESS_TOKEN_SECRET`.  A bearer token alone (`BEARER_TOKEN`) is insufficient to post tweets.
 
 ### Posting via Node script
 
@@ -38,4 +38,11 @@ If you only want to post the first part of the message, copy the `tweet` string 
 Both posting methods require valid X/Twitter API credentials.  In your GitHub repository:
 
 1. Navigate to **Settings** → **Secrets and variables** → **Actions**.
-2. Add secrets named `X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, and `X_ACCESS_TOKEN_SECRET` with your credential values.  This allows the GitHub Actions workflows and scripts to authenticate.
+2. Add secrets for your consumer credentials.  The primary names are:
+   - `CONSUMER_KEY` – your API key / consumer key
+   - `CONSUMER_SECRET` – your API secret / consumer secret
+   - `ACCESS_TOKEN` – your user access token
+   - `ACCESS_TOKEN_SECRET` – your user access token secret
+   - Optionally `BEARER_TOKEN` – if you also use application‑only authentication
+
+   The workflows also recognise the legacy secret names (`X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_SECRET`, `X_ACCESS_TOKEN_SECRET`) for compatibility.  Define whichever set matches your credentials; the scripts will pick the appropriate values.
