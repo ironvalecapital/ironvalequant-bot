@@ -1,0 +1,8 @@
+{
+  "name": "ironvalequant-bot",
+  "type": "module",
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "oauth-1.0a": "^2.2.6"
+  }
+}
